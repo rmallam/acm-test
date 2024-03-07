@@ -1,0 +1,123 @@
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: 'argotest'
+  namespace: 'argotest'
+  labels:
+    cloud: 'AWS'
+    region: 'us-east-1'
+    vendor: OpenShift
+    cluster.open-cluster-management.io/clusterset: 'default'
+spec:
+  baseDomain: khw9r.sandbox364.opentlc.com
+  clusterName: 'argotest'
+  controlPlaneConfig:
+    servingCertificates: {}
+  installAttemptsLimit: 1
+  installed: false
+  platform:
+    aws:
+      credentialsSecretRef:
+        name: argotest-aws-creds
+      region: us-east-1
+  provisioning:
+    installConfigSecretRef:
+      name: argotest-install-config
+    sshPrivateKeySecretRef:
+      name: argotest-ssh-private-key
+    imageSetRef:
+       #quay.io/openshift-release-dev/ocp-release:4.15.0-multi
+      name: img4.15.0-multi-appsub
+  pullSecretRef:
+    name: argotest-pull-secret
+---
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  labels:
+    cloud: Amazon
+    region: us-east-1
+    name: 'argotest'
+    vendor: OpenShift
+    cluster.open-cluster-management.io/clusterset: 'default'
+  name: 'argotest'
+spec:
+  hubAcceptsClient: true
+---
+apiVersion: hive.openshift.io/v1
+kind: MachinePool
+metadata:
+  name: argotest-worker
+  namespace: 'argotest'
+spec:
+  clusterDeploymentRef:
+    name: 'argotest'
+  name: worker
+  platform:
+    aws:
+      rootVolume:
+        iops: 2000
+        size: 100
+        type: io1
+      type: m5.xlarge
+  replicas: 3
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argotest-pull-secret
+  namespace: 'argotest'
+stringData:
+  .dockerconfigjson: # injected on create
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argotest-install-config
+  namespace: 'argotest'
+type: Opaque
+data:
+  # Base64 encoding of install-config yaml
+  install-config.yaml: YXBpVmVyc2lvbjogdjEKbWV0YWRhdGE6CiAgbmFtZTogJ2FyZ290ZXN0JwpiYXNlRG9tYWluOiBraHc5ci5zYW5kYm94MzY0Lm9wZW50bGMuY29tCmNvbnRyb2xQbGFuZToKICBoeXBlcnRocmVhZGluZzogRW5hYmxlZAogIG5hbWU6IG1hc3RlcgogIHJlcGxpY2FzOiAzCiAgcGxhdGZvcm06CiAgICBhd3M6CiAgICAgIHJvb3RWb2x1bWU6CiAgICAgICAgaW9wczogNDAwMAogICAgICAgIHNpemU6IDEwMAogICAgICAgIHR5cGU6IGlvMQogICAgICB0eXBlOiBtNS54bGFyZ2UKY29tcHV0ZToKLSBoeXBlcnRocmVhZGluZzogRW5hYmxlZAogIG5hbWU6ICd3b3JrZXInCiAgcmVwbGljYXM6IDMKICBwbGF0Zm9ybToKICAgIGF3czoKICAgICAgcm9vdFZvbHVtZToKICAgICAgICBpb3BzOiAyMDAwCiAgICAgICAgc2l6ZTogMTAwCiAgICAgICAgdHlwZTogaW8xCiAgICAgIHR5cGU6IG01LnhsYXJnZQpuZXR3b3JraW5nOgogIG5ldHdvcmtUeXBlOiBPVk5LdWJlcm5ldGVzCiAgY2x1c3Rlck5ldHdvcms6CiAgLSBjaWRyOiAxMC4xMjguMC4wLzE0CiAgICBob3N0UHJlZml4OiAyMwogIG1hY2hpbmVOZXR3b3JrOgogIC0gY2lkcjogMTAuMC4wLjAvMTYKICBzZXJ2aWNlTmV0d29yazoKICAtIDE3Mi4zMC4wLjAvMTYKcGxhdGZvcm06CiAgYXdzOgogICAgcmVnaW9uOiB1cy1lYXN0LTEKcHVsbFNlY3JldDogIiIgIyBza2lwLCBoaXZlIHdpbGwgaW5qZWN0IGJhc2VkIG9uIGl0J3Mgc2VjcmV0cwpzc2hLZXk6IHwtCiAgICBzc2gtcnNhIEFBQUFCM056YUMxeWMyRUFBQUFEQVFBQkFBQUNBUUNORjU3eC9YRjFkcFV6TGtOQlFXRXU3anFLV1FZMnRRY2JJb1RVdUg2clBRY0FpZ1k5YmVKOCtmYkFabGZ1QzVUa1dnODV0WWJQT290V2pLSXByQ25VdzdNNmJMcFdsWWhHSVJzSFgyNlFmd25sUjVmdzFtSFlWTlliYkhyWk9PR2ZyaElrdkd5TC96bmQxZG5WaUhGb0Jub3Bzbm1oTG93eEVodFh5ZVN3c1BsREkvM0R5ekV6Y2tVZUhFcWZRNHFabU5qR1p4Q2pZaThvNzhhM3dYWXZWeXJ1aEI2Wnk4cDhkb0IydTgvaTBkTWJmODlQRmgrcmRXMHR0bEVVeE9ONVhxME9SNVJtclppZVFMWDhuSEUxSGhjeGR2UmgwQVpUaDlyWFRoVGZ5NTRVMDlTSjI0SVptTnJZa3JnaUlYZnRUSkhOanM3T2crZVlXSmErWEppdnh2RmRlTklrcC9adnVtckg0eTNuUnR6bjA0OU9EeTZNckFzM0NQMVFFb3NsWEh1R2VSbEsxenFQd1RIRS9CL3JIYlc3QllSNlE4dEc5MEtHNkhMUmNmdFlLZ095OGdGZXFScEY0MlBuUUVGRTk1cHZRT0xucnhIcWZUTXdYRUNZeHhnZFBpZ1dPMVF3Q292ZGxMeFE2WmFkKzM3ZTB0S2lUamRuTkFCYm0wOG1oQkgwQ2RSSG5Pa1FsRDMza3NqVVUxcWZUL1VQOW12bjZLdkJGUDZadHg2djZObW5xaVRWZnpjc1Vtck1STGVtQjBnQjBIZlZpV0FrQnN0MU56NHhxb3lTWnU4MXp0QlZjQ3RKaUo1QmhuelJwWWFtcDAwNkp2Sy9HZnUxRmhoMUZsYkNNc3lKRzdTUjhwT3prSDMzK2pPeWo4SEVJamZEZ1lwekxlQmdQUT09Cg==
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argotest-ssh-private-key
+  namespace: 'argotest'
+stringData:
+  ssh-privatekey: # injected on create
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: argotest-aws-creds
+  namespace: 'argotest'
+stringData:
+  aws_access_key_id: AKIA4DM7VQFBZWXM6GOG
+  aws_secret_access_key: # injected on create
+---
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: 'argotest'
+  namespace: 'argotest'
+spec:
+  clusterName: 'argotest'
+  clusterNamespace: 'argotest'
+  clusterLabels:
+    cloud: Amazon
+    vendor: OpenShift
+  applicationManager:
+    enabled: true
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  iamPolicyController:
+    enabled: true
