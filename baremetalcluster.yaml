@@ -1,0 +1,96 @@
+---
+apiVersion: hypershift.openshift.io/v1beta1
+kind: HostedCluster
+metadata:
+  name: 'hosted'
+  namespace: 'hosted'
+  labels:
+spec:
+  release:
+    image: quay.io/openshift-release-dev/ocp-release:4.14.1-multi
+  pullSecret:
+    name: pullsecret-cluster-hosted
+  sshKey:
+    name: sshkey-cluster-hosted
+  networking:
+    clusterNetwork:
+      - cidr: 10.132.0.0/14
+    serviceNetwork:
+      - cidr: 172.31.0.0/16
+    networkType: OVNKubernetes
+  controllerAvailabilityPolicy: HighlyAvailable
+  platform:
+    type: Agent
+    agent:
+      agentNamespace: 'hardware-inventory'
+  infraID: 'hosted'
+  dns:
+    baseDomain: 'hypershift.lab'
+  services:
+  - service: APIServer
+    servicePublishingStrategy:
+      type: LoadBalancer
+  - service: OAuthServer
+    servicePublishingStrategy:
+      type: Route
+  - service: OIDC
+    servicePublishingStrategy:
+      type: Route
+  - service: Konnectivity
+    servicePublishingStrategy:
+      type: Route
+  - service: Ignition
+    servicePublishingStrategy:
+      type: Route
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pullsecret-cluster-hosted
+  namespace: hosted
+data:
+  '.dockerconfigjson': eyJhdXRocyI6eyJjbG91ZC5vcGVuc2hpZnQuY29tIjp7ImF1dGgiOiJiM0JsYm5Ob2FXWjBMWEpsYkdWaGMyVXRaR1YySzNKb2NHUnpZV1J0YVc1emNtVmthR0YwWTI5dE1XWnlaM05wWkhWNmNUSmtlbTV6YWpOcGR6QmhkRzFzYW1nM09qSk1TVEZFVlRNMU1GVkNRa3MxT0RSQ1RGVkJPREJGVFRVMVYwUlFSRE5YUkRJMFFrbzJRMEk1VnpORlNGSXpTMHBTU0ZoT1NGZ3lWbGxOTWxGRk1WUT0iLCJlbWFpbCI6InJocGRzLWFkbWluc0ByZWRoYXQuY29tIn0sInF1YXkuaW8iOnsiYXV0aCI6ImIzQmxibk5vYVdaMExYSmxiR1ZoYzJVdFpHVjJLM0pvY0dSellXUnRhVzV6Y21Wa2FHRjBZMjl0TVdaeVozTnBaSFY2Y1RKa2VtNXphak5wZHpCaGRHMXNhbWczT2pKTVNURkVWVE0xTUZWQ1FrczFPRFJDVEZWQk9EQkZUVFUxVjBSUVJETlhSREkwUWtvMlEwSTVWek5GU0ZJelMwcFNTRmhPU0ZneVZsbE5NbEZGTVZRPSIsImVtYWlsIjoicmhwZHMtYWRtaW5zQHJlZGhhdC5jb20ifSwicmVnaXN0cnkuY29ubmVjdC5yZWRoYXQuY29tIjp7ImF1dGgiOiJOVEUxTkRnME9EQjhkV2hqTFRGR2NrZHpTVVJWV2xFeVJIcHVVMG96YVZjd1FYUnRURXBvTnpwbGVVcG9Za2RqYVU5cFNsTlZlbFY0VFdsS09TNWxlVXA2WkZkSmFVOXBTWHBQUjFwclRWZEpORnBxWXpKT2FtY3dUbXBLYlZsWFRUUmFWRnBzV1ZSbmQwOUVVVEpPTWtrelRubEtPUzVZVW1RNUxTMUxRM2t6VmxwVmJGOWxkVGMwVEhwUU1GRXpPVll3UlVWZmVXUlpPRTVwVkdSU2NVbHlkMmhWUkhZdGNGRjJaRXRMVjFacFZtbGFRV0YwUWtoRVVWZG1WREIxWjJwZlRXSXpZbU5QVWt0cVNYZEJObGRRVFhZeFdUYzFSbWhZUVVnMVMyTXljM2xuU0hWeFdUUmZabGhTT1hKbmJXNDJOMGwwTW1oaVVYSnliM0JCTlhsYVlYcFhTemhQZVRCSmIyOVZXRkF0ZURCUFVqWjJWREpUVkdrdGJtNXNibEJMYkVGU1dUQkVaa3hKWW1rM09IWmxaWEZhZFVweVVEbDRTemxYZG5SYU9FWk9SRXB6UW5sVWMyVm1lRlJvVm10TE1EVndWRGxoVGs5blRreElUR0pNZVU1c2RFYzFSRTl4VTFKaVoxaExNREo2UlhOYVUzQndZbVpMZFZBd05WSllRV2xqUXkxNFdFWmlhbXRMYUZwa1lUZ3dWM2xuWkRKS2NUWlhXVkYzV1c4M1pYZ3RMVWgxTUVwS2VYQlRjelJJTlZZME5tNTBkVE5WUmxOVlVFUkJaRUo1Vm1WRFUyUnhja3B6VVdab1NtbHBMVmRKYlhkalducDZMVU53VGxSZk5WbzBlaTFXVWtjMGFWOWhWRjlUV25Wa1F6VnlTbUZMZEZwSFMxUlFXbGcwU0RsTkxXeERlRmxIWkRKTll6aHVXbGM0TldWVWVUSlBZbkJWT0hBMlMxOXNVM0EzV20xNVJ6aEViV2g2YkZBdFlUUXpiMEoxVjNoSlRIZzNZMjgzVTNCa09GUnlZVk5SYmpWbmFGcHZjMFZLWkdwNlgybGpUbEZoVmt0TmF6RkhRakV3YlUxdU9YSkJlR2RVY201cVUwOWFTRVp2Y1hkbVgyWTJkblpGV2kweVNVcDJRazkxVVVaUlFUaHNaRGx6UkRWRGIxWldORWR3VFd4MVJsOHpaR0pxY1hodVZURTBXWGRIVDJSaFNsZFNPRXRNVGxGd2JVOVJWMEpyV0ZKSWNWcHdOMDFVVDBaRFgwZE1WRFJXZUdOVE1YaHZhMHA2UlVGeE4xYzROekJTUVZvNFZuQXRVR2RzY0VKQ2MyUkRUMnRmZEdOQ05FWTVUMmhrWjBOUGIzSk1OSEprWm1wNmNFSm9iVVp1TUVoelZrRkZOR0prYVdoZlJqTkdTUT09IiwiZW1haWwiOiJyaHBkcy1hZG1pbnNAcmVkaGF0LmNvbSJ9LCJyZWdpc3RyeS5yZWRoYXQuaW8iOnsiYXV0aCI6Ik5URTFORGcwT0RCOGRXaGpMVEZHY2tkelNVUlZXbEV5UkhwdVUwb3phVmN3UVhSdFRFcG9OenBsZVVwb1lrZGphVTlwU2xOVmVsVjRUV2xLT1M1bGVVcDZaRmRKYVU5cFNYcFBSMXByVFZkSk5GcHFZekpPYW1jd1RtcEtiVmxYVFRSYVZGcHNXVlJuZDA5RVVUSk9Na2t6VG5sS09TNVlVbVE1TFMxTFEza3pWbHBWYkY5bGRUYzBUSHBRTUZFek9WWXdSVVZmZVdSWk9FNXBWR1JTY1VseWQyaFZSSFl0Y0ZGMlpFdExWMVpwVm1sYVFXRjBRa2hFVVZkbVZEQjFaMnBmVFdJelltTlBVa3RxU1hkQk5sZFFUWFl4V1RjMVJtaFlRVWcxUzJNeWMzbG5TSFZ4V1RSZlpsaFNPWEpuYlc0Mk4wbDBNbWhpVVhKeWIzQkJOWGxhWVhwWFN6aFBlVEJKYjI5VldGQXRlREJQVWpaMlZESlRWR2t0Ym01c2JsQkxiRUZTV1RCRVpreEpZbWszT0habFpYRmFkVXB5VURsNFN6bFhkblJhT0VaT1JFcHpRbmxVYzJWbWVGUm9WbXRMTURWd1ZEbGhUazluVGt4SVRHSk1lVTVzZEVjMVJFOXhVMUppWjFoTE1ESjZSWE5hVTNCd1ltWkxkVkF3TlZKWVFXbGpReTE0V0VaaWFtdExhRnBrWVRnd1YzbG5aREpLY1RaWFdWRjNXVzgzWlhndExVaDFNRXBLZVhCVGN6UklOVlkwTm01MGRUTlZSbE5WVUVSQlpFSjVWbVZEVTJSeGNrcHpVV1pvU21scExWZEpiWGRqV25wNkxVTndUbFJmTlZvMGVpMVdVa2MwYVY5aFZGOVRXblZrUXpWeVNtRkxkRnBIUzFSUVdsZzBTRGxOTFd4RGVGbEhaREpOWXpodVdsYzROV1ZVZVRKUFluQlZPSEEyUzE5c1UzQTNXbTE1UnpoRWJXaDZiRkF0WVRRemIwSjFWM2hKVEhnM1kyODNVM0JrT0ZSeVlWTlJialZuYUZwdmMwVktaR3A2WDJsalRsRmhWa3ROYXpGSFFqRXdiVTF1T1hKQmVHZFVjbTVxVTA5YVNFWnZjWGRtWDJZMmRuWkZXaTB5U1VwMlFrOTFVVVpSUVRoc1pEbHpSRFZEYjFaV05FZHdUV3gxUmw4elpHSnFjWGh1VlRFMFdYZEhUMlJoU2xkU09FdE1UbEZ3YlU5UlYwSnJXRkpJY1Zwd04wMVVUMFpEWDBkTVZEUldlR05UTVhodmEwcDZSVUZ4TjFjNE56QlNRVm80Vm5BdFVHZHNjRUpDYzJSRFQydGZkR05DTkVZNVQyaGtaME5QYjNKTU5ISmtabXA2Y0VKb2JVWnVNRWh6VmtGRk5HSmthV2hmUmpOR1NRPT0iLCJlbWFpbCI6InJocGRzLWFkbWluc0ByZWRoYXQuY29tIn19fQ==
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sshkey-cluster-hosted
+  namespace: 'hosted'
+stringData:
+  id_rsa.pub: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC5pFKFLOuxrd9Q/TRu9sRtwGg2PV+kl2MHzBIGUhCcR0LuBJk62XG9tQWPQYTQ3ZUBKb6pRTqPXg+cDu5FmcpTwAKzqgUb6ArnjECxLJzJvWieBJ7k45QzhlZPeiN2Omik5bo7uM/P1YIo5pTUdVk5wJjaMOb7Xkcmbjc7r22xY54cce2Wb7B1QDtLWJkq++eJHSX2GlEjfxSlEvQzTN7m2N5pmoZtaXpLKcbOqtuSQSVKC4XPgb57hgEs/ZZy/LbGGHZyLAW5Tqfk1JCTFGm6Q+oOd3wAOF1SdUxM7frdrN3UOB12u/E6YuAx3fDvoNZvcrCYEpjkfrsjU91oz78aETZV43hOK9NWCOhdX5djA7G35/EMn1ifanVoHG34GwNuzMdkb7KdYQUztvsXIC792E2XzWfginFZha6kORngokZ2DwrzFj3wgvmVyNXyEOqhwi6LmlsYdKxEvUtiYhdISvh2Y9GPrFcJ5DanXe7NVAKXe5CyERjBnxWktqAPBzXJa36FKIlkeVF5G+NWgufC6ZWkDCD98VZDiPP9sSgqZF8bSR4l4/vxxAW4knKIZv11VX77Sa1qZOR9Ml12t5pNGT7wDlSOiDqr5EWsEexga/2s/t9itvfzhcWKt+k66jd8tdws2dw6+8JYJeiBbU63HBjxCX+vCVZASrNBjiXhFw==
+---
+apiVersion: hypershift.openshift.io/v1beta1
+kind: NodePool
+metadata:
+  name: 'nodepool-hosted-1'
+  namespace: 'hosted'
+spec:
+  clusterName: 'hosted'
+  replicas: 2
+  management:
+    autoRepair: false
+    upgradeType: InPlace
+  platform:
+    type: Agent
+    agent:
+      agentLabelSelector:
+        matchLabels: {}
+  release:
+    image: quay.io/openshift-release-dev/ocp-release:4.14.1-multi
+---
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  annotations:
+    import.open-cluster-management.io/hosting-cluster-name: local-cluster 
+    import.open-cluster-management.io/klusterlet-deploy-mode: Hosted
+    open-cluster-management/created-via: hypershift
+  labels:
+    cloud: BareMetal
+    vendor: OpenShift
+    name: 'hosted'
+  name: 'hosted'
+spec:
+  hubAcceptsClient: true
+---
